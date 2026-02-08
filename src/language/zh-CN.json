@@ -203,6 +203,7 @@
   "pi-liang-cao-zuo": "批量操作",
   "pwa-app": "PWA应用",
   "install": "安装",
+  "pwa-install-unavailable": "当前无法安装 PWA，请使用浏览器安装菜单，或确保已满足安装条件。",
   "yin-pin-jia-zai-shi-bai": "音频加载失败",
   "guan-zhu": "关注",
   "fen-si": "粉丝",

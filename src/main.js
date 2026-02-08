@@ -9,6 +9,7 @@ import MessagePlugin from './plugins/MessagePlugin';
 import i18n from './utils/i18n';
 import '@/assets/themes/dark.css';
 import { registerSW } from 'virtual:pwa-register'
+import { initPwaInstall } from './utils/pwaInstall';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -30,6 +31,7 @@ window.addEventListener('unhandledrejection', event => {
 });
 
 if (!window.electron) {
+  initPwaInstall();
   registerSW({
     onNeedRefresh() {
       console.log('有新内容可用，请刷新页面')

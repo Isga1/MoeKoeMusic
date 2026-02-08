@@ -193,6 +193,7 @@
   "qie-huan-bo-fang-mo-shi": "切換播放模式",
   "pwa-app": "PWA應用程序",
   "install": "安裝",
+  "pwa-install-unavailable": "目前無法安裝 PWA，請使用瀏覽器安裝選單，或確認已符合安裝條件。",
   "yin-pin-jia-zai-shi-bai": "音頻加載失敗",
   "zheng-zai-jia-zai-quan-bu-ge-qu": "正在載入全部歌曲...",
   "bo-fang-chu-cuo": "播放出錯",

@@ -203,6 +203,7 @@
   "pi-liang-cao-zuo": "Select Multiple",
   "pwa-app": "PWA App",
   "install": "Install",
+  "pwa-install-unavailable": "PWA install isn't available yet. Use the browser install menu or make sure installation requirements are met.",
   "yin-pin-jia-zai-shi-bai": "Failed to Load Audio",
   "guan-zhu": "Following",
   "fen-si": "Followers",

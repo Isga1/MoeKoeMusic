@@ -193,6 +193,7 @@
   "qie-huan-bo-fang-mo-shi": "再生モードを切り替えます",
   "pwa-app": "PWA アプリケーション",
   "install": "インストール",
+  "pwa-install-unavailable": "現在 PWA をインストールできません。ブラウザのインストールメニューを使用するか、条件を満たしているか確認してください。",
   "yin-pin-jia-zai-shi-bai": "音楽のロードに失敗しました",
   "zheng-zai-jia-zai-quan-bu-ge-qu": "すべての曲を読み込んでいます...",
   "bo-fang-chu-cuo": "再生エラー",

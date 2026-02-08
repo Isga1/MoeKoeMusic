@@ -205,6 +205,7 @@ import { MoeAuthStore } from '../stores/store';
 import ExtensionManager from '@/components/ExtensionManager.vue';
 import { requestMicrophonePermission } from '../utils/utils';
 import { DEFAULT_API_BASE_URL, validateApiBaseUrl, testApiBaseUrl as testApiBaseUrlRequest } from '@/utils/apiBaseUrl';
+import { getDeferredPrompt, clearDeferredPrompt } from '@/utils/pwaInstall';
 
 const MoeAuth = MoeAuthStore();
 const { t } = useI18n();
@@ -1374,28 +1375,25 @@ const openResetConfirmation = async () => {
     }
 };
 
-let deferredPrompt;
-if(!isElectron()){
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-    });
-}
-
 const installPWA = async () => {
     if(isElectron()){
         window.$modal.alert(t('qing-zai-web-huan-jing-xia-an-zhuang'));
         return;
     }
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    const promptEvent = getDeferredPrompt();
+    if (!promptEvent) {
+        window.$modal.alert(t('pwa-install-unavailable'));
+        return;
+    }
+    promptEvent.prompt();
+    const { outcome } = await promptEvent.userChoice;
     
     if (outcome === 'accepted') {
         console.log('User accepted the PWA installation');
-        deferredPrompt = null;
     } else {
         console.log('User declined the PWA installation');
     }
+    clearDeferredPrompt();
 };
 </script>
 

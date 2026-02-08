@@ -1015,20 +1015,39 @@ const setAudioOutputDeviceWatcherEnabled = (enabled) => {
 
 let audioOutputDeviceWatchChangeHandler = null;
 
-const applyAudioOutputDevice = async (deviceId) => {
+const resetAudioOutputDeviceSetting = () => {
+    try {
+        const saved = JSON.parse(localStorage.getItem('settings') || '{}');
+        if (saved.audioOutputDevice && saved.audioOutputDevice !== 'default') {
+            saved.audioOutputDevice = 'default';
+            localStorage.setItem('settings', JSON.stringify(saved));
+        }
+    } catch {
+        // ignore
+    }
+};
+
+const applyAudioOutputDevice = async (deviceId, options = {}) => {
+    const { silent = false, fallbackToDefault = false } = options;
+    if (!deviceId || deviceId === 'default') return true;
+
     if (typeof audio?.setSinkId !== 'function') {
         console.warn('[PlayerControl] 当前环境不支持切换音频输出设备（setSinkId不可用）');
+        if (fallbackToDefault) resetAudioOutputDeviceSetting();
         return false;
     }
 
-    const sinkId = deviceId || 'default';
+    const sinkId = deviceId;
     try {
         await audio.setSinkId(sinkId);
         console.log('[PlayerControl] 已切换音频输出设备:', sinkId);
         return true;
     } catch (error) {
         console.warn('[PlayerControl] 切换音频输出设备失败:', error);
-        window.$modal.alert('切换音频输出设备失败,请刷新页面后重试');
+        if (!silent) {
+            window.$modal.alert('切换音频输出设备失败,请刷新页面后重试');
+        }
+        if (fallbackToDefault) resetAudioOutputDeviceSetting();
         return false;
     }
 };
@@ -1072,7 +1091,7 @@ onMounted(() => {
 
     const savedSettings = JSON.parse(localStorage.getItem('settings') || '{}');
     setAudioOutputDeviceWatcherEnabled(savedSettings.pauseOnAudioOutputChange === 'on');
-    void applyAudioOutputDevice(savedSettings.audioOutputDevice);
+    void applyAudioOutputDevice(savedSettings.audioOutputDevice, { silent: true, fallbackToDefault: true });
 
     audioOutputDeviceWatchChangeHandler = (event) => {
         const enabled = !!event?.detail?.enabled;
@@ -1082,7 +1101,7 @@ onMounted(() => {
 
     audioOutputDeviceChangeHandler = (event) => {
         const deviceId = event?.detail?.deviceId || 'default';
-        void applyAudioOutputDevice(deviceId);
+        void applyAudioOutputDevice(deviceId, { silent: false, fallbackToDefault: true });
     };
     window.addEventListener('audio-output-device-change', audioOutputDeviceChangeHandler);
 
