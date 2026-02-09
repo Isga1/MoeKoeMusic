@@ -49,7 +49,6 @@ const agree = () => {
 const disagree = () => {
     if(isElectron()){
         window.electron.ipcRenderer.send('disclaimer-response', false);
-        window.close();
         return;
     }
     window.$message?.warning?.('您已拒绝用户条款，页面即将跳转空白页');

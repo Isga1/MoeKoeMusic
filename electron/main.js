@@ -110,6 +110,7 @@ if (settings?.apiMode === 'on') {
 
 // 即将退出
 app.on('before-quit', () => {
+    app.isQuitting = true;
     if (mainWindow && !mainWindow.isMaximized()) {
         const windowBounds = mainWindow.getBounds();
         store.set('windowState', windowBounds);
@@ -151,6 +152,7 @@ ipcMain.on('disclaimer-response', (event, accepted) => {
     if (accepted) {
         store.set('disclaimerAccepted', true);
     } else {
+        app.isQuitting = true;
         app.quit();
     }
 });
