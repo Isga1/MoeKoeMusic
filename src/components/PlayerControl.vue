@@ -439,6 +439,29 @@ const toggleCoverMode = () => {
     localStorage.setItem('lyrics-cover-mode', coverMode.value);
 };
 
+const isAutoplayBlockedError = (error) => {
+    if (!error) return false;
+    const message = `${error.message || ''}`.toLowerCase();
+    return error.name === 'NotAllowedError'
+        || message.includes("didn't interact with the document first")
+        || message.includes('user gesture')
+        || message.includes('autoplay');
+};
+
+let lastAutoplayHintAt = 0;
+const notifyAutoplayBlocked = () => {
+    const now = Date.now();
+    if (now - lastAutoplayHintAt < 1500) return;
+    lastAutoplayHintAt = now;
+
+    const hint = '浏览器限制了自动播放，请点击播放按钮继续';
+    if (window.$message?.warning) {
+        window.$message.warning(hint);
+    } else {
+        window.$modal?.alert?.(hint);
+    }
+};
+
 // 播放歌曲
 const playSong = async (song) => {
     clearAutoSwitchTimer();
@@ -497,9 +520,15 @@ const playSong = async (song) => {
                 await audio.play();
                 playing.value = true;
             } catch (retryError) {
-                console.error('[PlayerControl] 重试播放失败:', retryError);
-                window.$modal.alert(t('bo-fang-shi-bai'));
-                playing.value = false;
+                if (isAutoplayBlockedError(retryError)) {
+                    console.warn('[PlayerControl] 自动播放被浏览器拦截:', retryError);
+                    notifyAutoplayBlocked();
+                    playing.value = false;
+                } else {
+                    console.error('[PlayerControl] 重试播放失败:', retryError);
+                    window.$modal.alert(t('bo-fang-shi-bai'));
+                    playing.value = false;
+                }
             }
         }
 
@@ -577,8 +606,13 @@ const togglePlayPause = async () => {
             await audio.play();
             playing.value = true;
         } catch (retryError) {
-            console.error('[PlayerControl] 播放失败:', retryError);
-            window.$modal.alert(t('bo-fang-shi-bai'));
+            if (isAutoplayBlockedError(retryError)) {
+                console.warn('[PlayerControl] 自动播放被浏览器拦截:', retryError);
+                notifyAutoplayBlocked();
+            } else {
+                console.error('[PlayerControl] 播放失败:', retryError);
+                window.$modal.alert(t('bo-fang-shi-bai'));
+            }
         }
     }
 };

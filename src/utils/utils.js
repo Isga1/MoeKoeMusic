@@ -186,8 +186,36 @@ export const openRegisterUrl = (registerUrl) => {
 };
 
 // 分享
+const copyTextToClipboard = async (text) => {
+    if (typeof navigator !== 'undefined' && navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+    }
+
+    if (typeof document === 'undefined' || !document.body) return false;
+
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    textarea.style.pointerEvents = 'none';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, text.length);
+
+    let copied = false;
+    if (typeof document.execCommand === 'function') {
+        copied = document.execCommand('copy');
+    }
+
+    document.body.removeChild(textarea);
+    return copied;
+};
+
 import { MoeAuthStore } from '../stores/store';
-export const share = (songName, id, type = 0, songDesc = '') => {
+export const share = async (songName, id, type = 0, songDesc = '') => {
     let text = '';
     const MoeAuth = MoeAuthStore();
     let userName = '萌音';
@@ -206,12 +234,25 @@ export const share = (songName, id, type = 0, songDesc = '') => {
         }
     } else {
         //  Web / H5 逻辑
-        shareUrl = (window.location.host + '/#/') + (type == 0 ? `share/?hash=${id}` : `share?listid=${id}`);
+        const baseUrl = window.location.href.split('#')[0];
+        const shareQuery = type == 0
+            ? `share/?hash=${encodeURIComponent(id)}`
+            : `share?listid=${encodeURIComponent(id)}`;
+        shareUrl = `${baseUrl}#/${shareQuery}`;
     }
     text = `你的好友@${userName}分享了${songDesc}《${songName}》给你,快去听听吧! ${shareUrl}`;
 
-    navigator.clipboard.writeText(text);
-    $message.success(
-        i18n.global.t('kou-ling-yi-fu-zhi,kuai-ba-ge-qu-fen-xiang-gei-peng-you-ba')
-    );
+    try {
+        const copied = await copyTextToClipboard(text);
+        if (!copied) throw new Error('ClipboardUnavailable');
+        window.$message?.success(
+            i18n.global.t('kou-ling-yi-fu-zhi,kuai-ba-ge-qu-fen-xiang-gei-peng-you-ba')
+        );
+    } catch (error) {
+        console.warn('[Share] Copy to clipboard failed:', error);
+        window.$message?.error?.('复制失败，请手动复制分享内容');
+        if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
+            window.prompt('请手动复制以下分享内容：', text);
+        }
+    }
 };

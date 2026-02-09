@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onUpdated } from "vue";
+import { ref, onMounted, computed, onUnmounted, watch } from "vue";
 import { get } from '../utils/request';
 import ContextMenu from '../components/ContextMenu.vue';
 import { useRoute,useRouter } from 'vue-router';
@@ -168,6 +168,7 @@ const showContextMenu = (event, song) => {
 const props = defineProps({
     playerControl: Object
 });
+const lastHandledShareKey = ref('');
 
 const currentMode = ref('1');
 const modes = ['1', '2', '3', '4', '6'];
@@ -248,26 +249,68 @@ onMounted(() => {
     recommend();
     loadPersonalSongs();
     playlist();
+    window.addEventListener('disclaimer-accepted', handleDisclaimerAccepted);
 });
 
-onUpdated(() => {
-    if(!window.electron){
-        if(route.query.hash){
-            privilegeSong(route.query.hash).then(res=>{
-                if(res.status==1){
-                    const songInfo = res.data[0];
-                    playSong(songInfo.hash,songInfo.albumname,getCover(songInfo.info.image, 480),songInfo.singername)
-                    router.push('/');
-                }
-            })
-        }else if(route.query.listid){
-            router.push({
-                path: '/PlaylistDetail',
-                query: { global_collection_id: route.query.listid }
-            });
-        }
+onUnmounted(() => {
+    window.removeEventListener('disclaimer-accepted', handleDisclaimerAccepted);
+});
+
+const normalizeQueryValue = (value) => {
+    if (Array.isArray(value)) return value[0];
+    return value;
+};
+
+const canHandleShareRoute = () => {
+    if (window.electron) return false;
+    return !!localStorage.getItem('disclaimerAccepted');
+};
+
+const handleSharedRoute = async () => {
+    if (window.electron) return;
+
+    const hash = normalizeQueryValue(route.query.hash);
+    const listid = normalizeQueryValue(route.query.listid);
+    if (!hash && !listid) {
+        lastHandledShareKey.value = '';
+        return;
     }
-})
+
+    if (!canHandleShareRoute()) return;
+
+    const currentKey = `${hash || ''}|${listid || ''}`;
+    if (lastHandledShareKey.value === currentKey) return;
+    lastHandledShareKey.value = currentKey;
+
+    if (hash) {
+        try {
+            const res = await privilegeSong(hash);
+            if (res.status == 1 && Array.isArray(res.data) && res.data.length > 0) {
+                const songInfo = res.data[0];
+                playSong(songInfo.hash, songInfo.albumname, getCover(songInfo.info.image, 480), songInfo.singername);
+                router.push('/');
+            }
+        } catch (error) {
+            console.error('[Home] 处理分享歌曲失败:', error);
+        }
+        return;
+    }
+
+    if (listid) {
+        router.push({
+            path: '/PlaylistDetail',
+            query: { global_collection_id: listid }
+        });
+    }
+};
+
+const handleDisclaimerAccepted = () => {
+    void handleSharedRoute();
+};
+
+watch(() => [route.query.hash, route.query.listid], () => {
+    void handleSharedRoute();
+}, { immediate: true });
 
 const recommend = async () => {
     const response = await get('/everyday/recommend');
