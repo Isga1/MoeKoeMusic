@@ -649,3 +649,58 @@ html.dark .sort-selector{
 html.dark .section-content{
     color: #777;
 }
+
+/* Route-specific button states to avoid global dark button flattening */
+html.dark .discover-page .main-categories button,
+html.dark .discover-page .sub-categories button {
+    background-color: #2a2a2a !important;
+    color: #b9b9b9 !important;
+    border: 1px solid #3a3a3a !important;
+}
+
+html.dark .discover-page .main-categories button:hover:not(.active),
+html.dark .discover-page .sub-categories button:hover:not(.active) {
+    background-color: #333 !important;
+    color: #e1e1e1 !important;
+}
+
+html.dark .discover-page .main-categories button.active,
+html.dark .discover-page .sub-categories button.active {
+    background-color: #2a2a2a !important;
+    color: var(--primary-color) !important;
+    border-color: #444 !important;
+}
+
+html.dark .library-page .category-tabs button {
+    background-color: #2a2a2a !important;
+    color: #b9b9b9 !important;
+    border: 1px solid #3a3a3a !important;
+}
+
+html.dark .library-page .category-tabs button:hover:not(.active) {
+    background-color: #333 !important;
+    color: #e1e1e1 !important;
+}
+
+html.dark .library-page .category-tabs button.active {
+    background-color: #2a2a2a !important;
+    color: var(--primary-color) !important;
+    border-color: #444 !important;
+}
+
+html.dark .login-page .segmented-button {
+    background-color: #2a2a2a !important;
+    color: #aaa !important;
+    border: none !important;
+}
+
+html.dark .login-page .segmented-button:hover:not(.active) {
+    background-color: #333 !important;
+    color: #e1e1e1 !important;
+}
+
+html.dark .login-page .segmented-button.active {
+    background-color: #2a2a2a !important;
+    color: var(--primary-color) !important;
+}
+

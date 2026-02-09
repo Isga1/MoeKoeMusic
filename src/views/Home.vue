@@ -604,26 +604,19 @@ const addAllSongsToQueue = () => {
 }
 
 .skeleton-loader {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 10px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
     margin-top: 10px;
     margin-bottom: 20px;
-}
-
-.daily-skeleton-loader {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.personal-skeleton-loader {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    justify-content: flex-start;
 }
 
 .skeleton-item {
     display: flex;
     align-items: center;
     min-width: 0;
-    width: auto;
+    width: calc(20% - 30px);
     border-radius: 10px;
     padding-left: 10px;
     padding-right: 10px;
@@ -658,27 +651,6 @@ const addAllSongsToQueue = () => {
 
 .skeleton-line.short {
     max-width: 96px;
-}
-
-@media screen and (max-width: 1200px) {
-    .daily-skeleton-loader,
-    .personal-skeleton-loader {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
-
-@media screen and (max-width: 900px) {
-    .daily-skeleton-loader,
-    .personal-skeleton-loader {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-@media screen and (max-width: 640px) {
-    .daily-skeleton-loader,
-    .personal-skeleton-loader {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
 }
 
 .radio-card {
