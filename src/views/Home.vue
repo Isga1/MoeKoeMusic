@@ -67,8 +67,8 @@
             <img src="@/assets/images/home/mama.png" class="mama" @click="addAllSongsToQueue">
             {{ $t('mei-ri-tui-jian') }}
         </h2>
-        <div v-if="isLoading" class="skeleton-loader">
-            <div v-for="n in 16" :key="n" class="skeleton-item">
+        <div v-if="isLoading" class="skeleton-loader daily-skeleton-loader">
+            <div v-for="n in dailySkeletonCount" :key="n" class="skeleton-item">
                 <div class="skeleton-cover"></div>
                 <div class="skeleton-info">
                     <div class="skeleton-line"></div>
@@ -84,6 +84,35 @@
                 <div class="song-info">
                     <div class="song-title">{{ song.ori_audio_name }}</div>
                     <div class="song-artist">{{ song.author_name }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="section-title-row">
+            <div class="section-title-left">
+                <h2 class="section-title section-title-no-margin">私人专属好歌</h2>
+                <img src="@/assets/images/home/mama.png" class="personal-mama" @click="replacePersonalSongsToQueue">
+            </div>
+            <button class="refresh-button" type="button" :disabled="isPersonalLoading" @click="refreshPersonalSongs">
+                {{ isPersonalLoading ? '刷新中...' : '刷新' }}
+            </button>
+        </div>
+        <div v-if="isPersonalLoading" class="skeleton-loader personal-skeleton-loader">
+            <div v-for="n in personalSongLimit" :key="`personal-skeleton-${n}`" class="skeleton-item">
+                <div class="skeleton-cover"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line short"></div>
+                </div>
+            </div>
+        </div>
+        <div v-else class="song-list">
+            <div class="song-item" v-for="(song, index) in personalSongs" :key="`personal-${index}`"
+                @click="playSong($getQuality(null, song), song.ori_audio_name || song.songname || song.filename, $getCover(song.sizable_cover, 480), song.author_name || song.singername)"
+                @contextmenu.prevent="showContextMenu($event, song)">
+                <img :src="$getCover(song.sizable_cover, 64)" :alt="song.ori_audio_name || song.songname || song.filename" class="song-cover">
+                <div class="song-info">
+                    <div class="song-title">{{ song.ori_audio_name || song.songname || song.filename }}</div>
+                    <div class="song-artist">{{ song.author_name || song.singername }}</div>
                 </div>
             </div>
         </div>
@@ -116,8 +145,12 @@ import { getCover } from '../utils/utils';
 const router = useRouter();
 const route = useRoute();
 const songs = ref([]);
+const personalSongs = ref([]);
+const dailySkeletonCount = 30;
+const personalSongLimit = 15;
 const special_list = ref([]);
 const isLoading = ref(true);
+const isPersonalLoading = ref(true);
 const playSong = (hash, name, img, author) => {
     props.playerControl.addSongToQueue(hash, name, img, author);
 };
@@ -125,7 +158,7 @@ const contextMenuRef = ref(null);
 const showContextMenu = (event, song) => {
     if (contextMenuRef.value) {
         contextMenuRef.value.openContextMenu(event, {
-            OriSongName: song.filename,
+            OriSongName: song.filename || song.ori_audio_name || song.songname,
             FileHash: song.hash,
             cover: song.sizable_cover?.replace("{size}", 480) || './assets/images/ico.png',
             timeLength: song.time_length
@@ -213,6 +246,7 @@ const playFM = async (event) => {
 
 onMounted(() => {
     recommend();
+    loadPersonalSongs();
     playlist();
 });
 
@@ -241,6 +275,38 @@ const recommend = async () => {
         songs.value = response.data.song_list.sort(() => Math.random() - 0.5);
     }
     isLoading.value = false;
+}
+
+const loadPersonalSongs = async (forceRefresh = false) => {
+    isPersonalLoading.value = true;
+    try {
+        const params = { card_id: 1 };
+        if (forceRefresh) {
+            params._t = Date.now();
+        }
+        const response = await get('/top/card', params);
+        if (response.status === 1) {
+            const list = response.data?.song_list || [];
+            personalSongs.value = list.slice(0, personalSongLimit);
+        }
+    } finally {
+        isPersonalLoading.value = false;
+    }
+}
+
+const refreshPersonalSongs = async () => {
+    await loadPersonalSongs(true);
+}
+
+const replacePersonalSongsToQueue = () => {
+    if (!personalSongs.value.length) return;
+    props.playerControl.addPlaylistToQueue(personalSongs.value.map(song => ({
+        hash: song.hash,
+        name: song.ori_audio_name || song.songname || song.filename,
+        cover: song.sizable_cover?.replace("{size}", 480),
+        author: song.author_name || song.singername,
+        timelen: song.time_length
+    })));
 }
 
 const playlist = async () => {
@@ -276,8 +342,55 @@ const addAllSongsToQueue = () => {
 .section-title {
     font-size: 28px;
     font-weight: bold;
-    margin-bottom: 30px;
+    margin: 0 0 18px;
+    line-height: 1.2;
     color: var(--primary-color);
+}
+
+.section-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.section-title-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title-no-margin {
+    margin: 0;
+}
+
+.personal-mama {
+    display: block;
+    height: 36px;
+    cursor: pointer;
+}
+
+.refresh-button {
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background-color: #fff;
+    color: var(--primary-color);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refresh-button:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.refresh-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .section-title .mama{
@@ -329,6 +442,7 @@ const addAllSongsToQueue = () => {
     gap: 12px;
     margin-top: 20px;
     justify-content: flex-start;
+    margin-bottom: 20px;
 }
 
 .song-item {
@@ -480,6 +594,7 @@ const addAllSongsToQueue = () => {
     color: #666;
     font-size: 14px;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -489,19 +604,29 @@ const addAllSongsToQueue = () => {
 }
 
 .skeleton-loader {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px 12px;
     margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.daily-skeleton-loader {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.personal-skeleton-loader {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .skeleton-item {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
-    width: 250px;
+    min-width: 0;
+    width: auto;
     border-radius: 10px;
     padding-left: 10px;
+    padding-right: 10px;
     background-color: #f0f0f0;
     height: 68px;
 }
@@ -518,7 +643,8 @@ const addAllSongsToQueue = () => {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    max-width: 190px;
+    flex: 1;
+    min-width: 0;
 }
 
 .skeleton-line {
@@ -526,7 +652,33 @@ const addAllSongsToQueue = () => {
     background-color: #e0e0e0;
     margin-bottom: 5px;
     border-radius: 5px;
-    width: 150px;
+    width: 100%;
+    max-width: 150px;
+}
+
+.skeleton-line.short {
+    max-width: 96px;
+}
+
+@media screen and (max-width: 1200px) {
+    .daily-skeleton-loader,
+    .personal-skeleton-loader {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .daily-skeleton-loader,
+    .personal-skeleton-loader {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media screen and (max-width: 640px) {
+    .daily-skeleton-loader,
+    .personal-skeleton-loader {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .radio-card {

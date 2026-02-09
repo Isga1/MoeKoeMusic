@@ -87,7 +87,7 @@ html.dark .modal-content button:hover {
     background-color: #363636;
 }
 
-/* 播放器控件 */
+/* 播放器控�?*/
 html.dark .player-container {
     background-color: rgba(24, 24, 24) !important;
     border-top: 1px solid #333 !important;
@@ -128,14 +128,14 @@ html.dark .song-item {
     border-color: #333;
 }
 
-/* 输入框 */
+/* 输入�?*/
 html.dark input {
     color: #e1e1e1;
     border-color: #333;
     background: black;
 }
 
-/* 滚动条 */
+/* 滚动�?*/
 html.dark ::-webkit-scrollbar-track {
     background-color: #2a2a2a;
 }
@@ -211,6 +211,18 @@ html.dark button {
 
 html.dark button:hover {
     background-color: #363636 !important;
+}
+
+/* Home refresh button keeps themed text color without affecting all buttons */
+html.dark button.refresh-button {
+    background-color: #2a2a2a !important;
+    color: var(--primary-color) !important;
+    border: 1px solid #373434 !important;
+}
+
+html.dark button.refresh-button:hover {
+    background-color: #363636 !important;
+    color: var(--primary-color) !important;
 }
 
 /* 链接 */
